@@ -58,6 +58,26 @@ export const getAppointments = async (_req: Request, res: Response) => {
   }
 };
 
+export const cancelAppointment = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!id || id.length !== 24) {
+      return res.status(400).json({ message: "ID inválido" });
+    }
+
+    const deleted = await Appointment.findByIdAndDelete(id);
+
+    if (!deleted) {
+      return res.status(404).json({ message: "Agendamento não encontrado" });
+    }
+
+    return res.status(204).send(); // sucesso, sem corpo
+  } catch (error) {
+    console.error("Erro ao cancelar agendamento:", error);
+    return res.status(500).json({ message: "Erro interno do servidor" });
+  }
+};
 
 // import { Request, Response } from 'express';
 // import Appointment from '../models/appointment';

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middlewares/auth';
-import { createAppointment, getAppointments } from '../controllers/appointmentController';
+import { createAppointment, getAppointments, cancelAppointment } from '../controllers/appointmentController';
 
 const router = Router();
 
@@ -9,5 +9,8 @@ router.post('/', authMiddleware, createAppointment);
 
 // Listar agendamentos
 router.get('/', authMiddleware, getAppointments);
+
+// Cancelar agendamento (precisa estar autenticado)
+router.delete('/:id', authMiddleware, cancelAppointment);
 
 export default router;
