@@ -4,13 +4,16 @@ import { createAppointment, getAppointments, cancelAppointment } from '../contro
 
 const router = Router();
 
-// Criar agendamento (precisa estar autenticado)
+// Criar agendamento
+
 router.post('/', authMiddleware, createAppointment);
 
 // Listar agendamentos
+
 router.get('/', authMiddleware, getAppointments);
 
-// Cancelar agendamento (precisa estar autenticado)
+// Cancelar agendamento
+
 router.delete('/:id', authMiddleware, cancelAppointment);
 
 export default router;

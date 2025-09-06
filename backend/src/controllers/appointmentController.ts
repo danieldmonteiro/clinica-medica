@@ -1,49 +1,94 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import Appointment from '../models/appointment';
 import { obterPrevisaoClima } from '../services/weatherService';
+import user from '../models/user';
+
+// Criar agendamento
 
 export const createAppointment = async (req: Request, res: Response) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    // Pega o userId diretamente do token JWT decodificado pelo middleware
-    const paciente = (req as any).userId;
+    const userId = (req as any).userId;
+    const { data, duration, descricao } = req.body;
 
-    const { data, endereco, descricao } = req.body;
-
-    if (!data || !endereco || !descricao) {
-      return res.status(400).json({ message: 'Data, endereço e descrição são obrigatórios' });
+    if (!data || !duration || !descricao) {
+      await session.abortTransaction();
+      // session.endSession();
+      return res.status(400).json({ message: 'Data, duração e descrição são obrigatórios' });
     }
 
-    // Chama o serviço de previsão do clima
-    // const previsaoClima = await obterPrevisaoClima(endereco, new Date(data));
+    const currentUser = await user.findById(userId).session(session);
+    if (!currentUser) {
+      await session.abortTransaction();
+      // session.endSession();
+      return res.status(404).json({ message: 'Usuário não encontrado' });
+    }
+
+    if (!currentUser.address || !currentUser.address.localidade) {
+      await session.abortTransaction();
+      // session.endSession();
+      return res.status(400).json({ message: 'Endereço do usuário necessário para obter clima' });
+    }
+
+    const start = new Date(data);
+    const end = new Date(start.getTime() + duration * 60 * 1000);
+
+    // Checar conflito de horários
+
+    const conflict = await Appointment.findOne({
+      paciente: currentUser._id,
+      data: {
+        $lt: end,
+        $gt: new Date(start.getTime() - duration * 60 * 1000)
+    }
+    }).session(session);
+
+    if (conflict) {
+      await session.abortTransaction();
+      // session.endSession();
+      return res.status(409).json({ message: 'Horário já reservado' });
+    }
+    
+    // Obter previsão do clima usando o serviço
 
     let previsaoClima = 'Indisponível';
     try {
-      previsaoClima = await obterPrevisaoClima(endereco, new Date(data));
+      previsaoClima = await obterPrevisaoClima(currentUser.address.cep, start);
     } catch (err) {
-      console.error('Erro ao buscar previsão do clima:', err);
+      console.error('Erro ao obter previsão do clima:', err);
     }
 
-    const appointment = new Appointment({
-      paciente,
-      data,
-      endereco,
+    const appointment = await Appointment.create([{
+      paciente: currentUser._id,
+      endereco: currentUser.address.cep, // ou objeto completo se schema permitir
+      data: start,
+      start,
+      end,
+      duration,
       descricao,
       previsaoClima
-    });
+    }], { session });
 
-    await appointment.save();
+    await session.commitTransaction();
+    session.endSession();
+
     res.status(201).json({
       message: 'Consulta agendada com sucesso',
-      appointment
+      appointment: appointment[0]
     });
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      res.status(500).json({ message: err.message });
-    } else {
-      res.status(500).json({ message: 'Erro desconhecido' });
-    }
+
+  } catch (err: any) {
+    await session.abortTransaction();
+    session.endSession();
+    console.error(err);
+    res.status(500).json({ message: 'Erro interno do servidor' });
   }
 };
+
+// Listar agendamentos
 
 export const getAppointments = async (_req: Request, res: Response) => {
   try {
@@ -57,6 +102,8 @@ export const getAppointments = async (_req: Request, res: Response) => {
     }
   }
 };
+
+// Cancelar agendamento
 
 export const cancelAppointment = async (req: Request, res: Response) => {
   try {
@@ -78,44 +125,3 @@ export const cancelAppointment = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Erro interno do servidor" });
   }
 };
-
-// import { Request, Response } from 'express';
-// import Appointment from '../models/appointment';
-// import { obterPrevisaoClima } from '../services/weatherService';
-
-// export const createAppointment = async (req: Request, res: Response) => {
-//   try {
-//     const { paciente, data, endereco } = req.body;
-
-//     const previsaoClima = await obterPrevisaoClima(endereco, new Date(data));
-
-//     const appointment = new Appointment({
-//       paciente,
-//       data,
-//       endereco,
-//       previsaoClima
-//     });
-
-//     await appointment.save();
-//     res.status(201).json(appointment);
-//   } catch (err: unknown) {
-//     if (err instanceof Error) {
-//       res.status(500).json({ message: err.message });
-//     } else {
-//       res.status(500).json({ message: 'Erro desconhecido' });
-//     }
-//   }
-// };
-
-// export const getAppointments = async (_req: Request, res: Response) => {
-//   try {
-//     const appointments = await Appointment.find();
-//     res.json(appointments);
-//   } catch (err: unknown) {
-//     if (err instanceof Error) {
-//       res.status(500).json({ message: err.message });
-//     } else {
-//       res.status(500).json({ message: 'Erro desconhecido' });
-//     }
-//   }
-// };
