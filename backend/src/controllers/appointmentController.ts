@@ -36,21 +36,42 @@ export const createAppointment = async (req: Request, res: Response) => {
     const start = new Date(data);
     const end = new Date(start.getTime() + duration * 60 * 1000);
 
-    // Checar conflito de horários
+    // Verificar se a data é no passado
+
+    if (start < new Date()) {
+      await session.abortTransaction();
+      return res.status(400).json({ message: 'Não é possível agendar consultas no passado' });
+    }
+
+    // Checar conflito de horários (independente do usuário)
 
     const conflict = await Appointment.findOne({
-      paciente: currentUser._id,
       data: {
         $lt: end,
         $gt: new Date(start.getTime() - duration * 60 * 1000)
-    }
+      }
     }).session(session);
 
     if (conflict) {
       await session.abortTransaction();
-      // session.endSession();
       return res.status(409).json({ message: 'Horário já reservado' });
     }
+
+    // Checar conflito de horários (mesmo usuário)
+
+    // const conflict = await Appointment.findOne({
+    //   paciente: currentUser._id,
+    //   data: {
+    //     $lt: end,
+    //     $gt: new Date(start.getTime() - duration * 60 * 1000)
+    // }
+    // }).session(session);
+
+    // if (conflict) {
+    //   await session.abortTransaction();
+    //   // session.endSession();
+    //   return res.status(409).json({ message: 'Horário já reservado' });
+    // }
     
     // Obter previsão do clima usando o serviço
 
@@ -88,11 +109,26 @@ export const createAppointment = async (req: Request, res: Response) => {
   }
 };
 
-// Listar agendamentos
+// Listar agendamentos (por ordem de entrada)
+
+// export const getAppointments = async (_req: Request, res: Response) => {
+//   try {
+//     const appointments = await Appointment.find();
+//     res.json(appointments);
+//   } catch (err: unknown) {
+//     if (err instanceof Error) {
+//       res.status(500).json({ message: err.message });
+//     } else {
+//       res.status(500).json({ message: 'Erro desconhecido' });
+//     }
+//   }
+// };
+
+// Listar agendamentos (ordenados por data)
 
 export const getAppointments = async (_req: Request, res: Response) => {
   try {
-    const appointments = await Appointment.find();
+    const appointments = await Appointment.find().sort({ data: 1 }); // 1 = crescente, -1 = decrescente
     res.json(appointments);
   } catch (err: unknown) {
     if (err instanceof Error) {
