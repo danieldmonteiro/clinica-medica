@@ -1,76 +1,85 @@
 <template>
-  <div class="appointment-list">
-    <h2>Agendamentos</h2>
-    <ul>
-      <li v-for="appt in appointments" :key="appt._id">
-        {{ formatDate(appt.data) }} - {{ appt.tipo }} - {{ appt.paciente?.name || 'Paciente não disponível' }}
-        <button @click="cancelAppointment(appt._id)">Cancelar</button>
-      </li>
-    </ul>
+  <div>
+    <div
+      v-for="appt in sortedAppointments"
+      :key="appt._id"
+      class="appointment-card"
+    >
+      <p><strong>Data/Hora:</strong> {{ formatDateTime(appt.data) }}</p>
+      <p><strong>CEP:</strong> {{ formatCEP(appt.endereco) }}</p>
+      <p><strong>Paciente (ID):</strong> {{ appt.paciente }}</p>
+      <p><strong>Previsão do Clima:</strong> {{ appt.previsaoClima || 'Não disponível' }}</p>
+      <button @click="$emit('cancel', appt._id)">Cancelar</button>
+    </div>
   </div>
 </template>
 
 <script lang="ts">
-import { ref, onMounted } from 'vue';
-import api from '../services/api';
+import { defineComponent, computed } from 'vue';
+import type { PropType } from 'vue';
 
-export default {
+export default defineComponent({
   name: 'AppointmentList',
-  setup() {
-    const appointments = ref<any[]>([]);
-
-    const fetchAppointments = async () => {
-      try {
-        const res = await api.get('/appointments');
-        appointments.value = res.data;
-      } catch (err: any) {
-        alert(err?.response?.data?.message || 'Erro ao buscar agendamentos');
-      }
-    };
-
-    const cancelAppointment = async (id: string) => {
-      if (!confirm('Deseja realmente cancelar este agendamento?')) return;
-      try {
-        await api.delete(`/appointments/${id}`);
-        appointments.value = appointments.value.filter(a => a._id !== id);
-      } catch (err: any) {
-        alert(err?.response?.data?.message || 'Erro ao cancelar');
-      }
-    };
-
-    const formatDate = (dateStr: string) => {
-      const d = new Date(dateStr);
-      return d.toLocaleString();
-    };
-
-    onMounted(() => {
-      fetchAppointments();
-    });
-
-    return { appointments, cancelAppointment, formatDate };
+  props: {
+    appointments: {
+      type: Array as PropType<any[]>,
+      required: true,
+    },
   },
-};
+  setup(props) {
+    // Ordena do mais próximo ao mais distante
+    const sortedAppointments = computed(() =>
+      [...props.appointments].sort((a, b) => {
+        const timeA = new Date(a.data).getTime();
+        const timeB = new Date(b.data).getTime();
+        return timeA - timeB;
+      })
+    );
+
+    const formatDateTime = (datetime: string) => {
+      const dateObj = new Date(datetime);
+      return `${dateObj.toLocaleDateString()} ${dateObj.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      })}`;
+    };
+
+    const formatCEP = (cep: string) => {
+      if (!cep) return 'Não disponível';
+      const onlyNumbers = cep.replace(/\D/g, '');
+      if (onlyNumbers.length !== 8) return cep;
+      return onlyNumbers.replace(/(\d{5})(\d{3})/, '$1-$2');
+    };
+
+    return {
+      sortedAppointments,
+      formatDateTime,
+      formatCEP,
+    };
+  },
+});
 </script>
 
 <style scoped>
-.appointment-list {
+.appointment-card {
   background: #fff;
-  padding: 15px;
-  border-radius: 8px;
-  max-width: 600px;
-  margin-top: 20px;
-}
-ul {
-  list-style: none;
-  padding: 0;
-}
-li {
+  padding: 12px;
+  border-radius: 6px;
   margin-bottom: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  border: 1px solid #ddd;
 }
+
 button {
-  margin-left: 10px;
+  margin-top: 8px;
+  padding: 6px 12px;
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #dc2626;
 }
 </style>

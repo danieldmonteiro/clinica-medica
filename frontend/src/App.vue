@@ -2,7 +2,7 @@
   <div>
     <nav style="background: #ddd; padding: 10px; margin-bottom: 20px;">
       <template v-if="user">
-        <span>Olá, {{ user.name }} ({{ user.role }})</span>
+        <span>Olá, {{ user.role }}!</span>
         <button @click="logout" style="margin-left: 10px;">Sair</button>
         <router-link to="/appointments" style="margin-left: 10px;">Agendamentos</router-link>
         <router-link v-if="user.role === 'secretario'" to="/admin" style="margin-left: 10px;">Painel</router-link>
