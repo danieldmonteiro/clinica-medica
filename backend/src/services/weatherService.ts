@@ -7,19 +7,19 @@ export const obterPrevisaoClima = async (cep: string, data: Date): Promise<strin
     if (!apiKey) throw new Error('Chave de API do clima não configurada');
 
     // Obter latitude e longitude pelo CEP usando ViaCEP
+    
     const viaCepResponse = await axios.get(`https://viacep.com.br/ws/${cep}/json/`);
     const { localidade, uf } = viaCepResponse.data;
 
     if (!localidade) throw new Error('Cidade não encontrada para o CEP informado');
 
     // Remover acentos da cidade
+
     const city = removeAccents(localidade);
 
     // Construir localização no formato "Cidade,BR"
-    const location = `${city},BR`;
 
-    // Converter para string de localização (cidade, estado)
-    // const location = `${localidade},${uf}`;
+    const location = `${city},BR`;
 
     // Obter previsão do clima da OpenWeatherMap (5 dias / 3h)
     
@@ -28,6 +28,7 @@ export const obterPrevisaoClima = async (cep: string, data: Date): Promise<strin
     );
 
     // Filtrar a previsão para o dia da consulta
+
     const forecastList = weatherResponse.data.list;
     const forecastForDate = forecastList.find((f: any) => {
       const forecastDate = new Date(f.dt_txt);
@@ -46,12 +47,3 @@ export const obterPrevisaoClima = async (cep: string, data: Date): Promise<strin
     return 'Indisponível';
   }
 };
-
-// import axios from 'axios';
-
-// export const obterPrevisaoClima = async (cidade: string, dataConsulta: Date) => {
-//     const apiKey = process.env.OPENWEATHER_KEY;
-//     const { data } = await axios.get(`https://api.openweathermap.org/data/2.5/
-//   weather?q=${cidade}&appid=${apiKey}&lang=pt_br&units=metric`);
-//     return data.weather[0].description;
-// };

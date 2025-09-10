@@ -2,19 +2,23 @@
   <div class="form-container">
     <h1>Login</h1>
     <form @submit.prevent="onSubmit" novalidate>
+      
       <!-- E-mail -->
+
       <div class="form-field">
         <input v-model="email" type="email" placeholder="E-mail" />
         <span v-if="errors.email" class="error">{{ errors.email }}</span>
       </div>
 
       <!-- Senha -->
+
       <div class="form-field">
         <input v-model="senha" type="password" placeholder="Senha" />
         <span v-if="errors.senha" class="error">{{ errors.senha }}</span>
       </div>
 
       <!-- Erro de login geral -->
+       
       <div v-if="loginError" class="login-error">{{ loginError }}</div>
 
       <button type="submit">Entrar</button>

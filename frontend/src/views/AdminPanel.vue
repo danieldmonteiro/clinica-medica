@@ -3,11 +3,13 @@
     <h2>Painel Administrativo</h2>
 
     <!-- Exibe enquanto o usuário está sendo carregado -->
+
     <div v-if="loadingUser">
       <p>Carregando usuário...</p>
     </div>
 
     <!-- Painel para secretários -->
+
     <div v-else-if="user?.role === 'secretario'">
       <h3>Agendamentos</h3>
 
@@ -23,6 +25,7 @@
     </div>
 
     <!-- Usuários não autorizados -->
+
     <div v-else>
       <p>Acesso restrito ao Painel Administrativo.</p>
     </div>
@@ -44,6 +47,7 @@ export default {
     const loadingUser = ref(true);
 
     // Carrega usuário do localStorage
+
     const loadUser = () => {
       const stored = localStorage.getItem('clinica_user');
       if (stored && stored !== 'undefined' && stored !== 'null') {
@@ -58,6 +62,7 @@ export default {
     };
 
     // Redireciona se não for secretário
+
     const checkAccess = () => {
       if (!user.value || user.value.role !== 'secretario') {
         router.push('/login');
@@ -65,6 +70,7 @@ export default {
     };
 
     // Buscar agendamentos
+
     const fetchAppointments = async () => {
       try {
         const res = await api.get('/api/appointments');
@@ -76,6 +82,7 @@ export default {
     };
 
     // Cancelar agendamento
+    
     const cancelAppointment = async (id: string) => {
       if (!confirm('Deseja realmente cancelar este agendamento?')) return;
       try {

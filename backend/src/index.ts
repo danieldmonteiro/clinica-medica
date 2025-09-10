@@ -1,10 +1,3 @@
-// const express = require ('express');
-// const mongoose = require ('mongoose');
-// const cors = require ('cors');
-// const dotenv = require ('dotenv');
-// const userRoutes = require ('./routes/userRoutes') ();
-// const appointmentRoutes = require ('./routes/appointmentRoutes') ();
-
 import express, { Application } from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';

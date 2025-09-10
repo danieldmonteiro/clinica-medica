@@ -2,25 +2,30 @@
   <div class="form-container">
     <h1>Cadastro</h1>
     <form @submit.prevent="onSubmit" novalidate>
+      
       <!-- Nome -->
+
       <div class="form-field">
         <input v-model="nome" placeholder="Nome" />
         <span v-if="errors.nome" class="error">{{ errors.nome }}</span>
       </div>
 
       <!-- E-mail -->
+
       <div class="form-field">
         <input v-model="email" placeholder="E-mail" type="email" />
         <span v-if="errors.email" class="error">{{ errors.email }}</span>
       </div>
 
       <!-- Senha -->
+
       <div class="form-field">
         <input v-model="senha" type="password" placeholder="Senha" />
         <span v-if="errors.senha" class="error">{{ errors.senha }}</span>
       </div>
 
       <!-- Role -->
+
       <div class="form-field">
         <select v-model="role">
           <option value="paciente">Paciente</option>
@@ -30,6 +35,7 @@
       </div>
 
       <!-- CEP -->
+
       <div class="form-field">
         <input
           v-model="cep"
@@ -44,12 +50,14 @@
       </div>
 
       <!-- Número do endereço -->
+
       <div class="form-field">
         <input v-model="numero" placeholder="Número" />
         <span v-if="errors.numero" class="error">{{ errors.numero }}</span>
       </div>
 
       <!-- Logradouro, Bairro, Complemento, Localidade, UF -->
+       
       <div class="form-field">
         <input v-model="logradouro" placeholder="Logradouro" readonly />
       </div>
@@ -254,52 +262,3 @@ button:hover {
 }
 </style>
 
-
-<!-- <template>
-  <div class="form-container">
-    <h1>Cadastro</h1>
-    <form @submit.prevent="onSubmit">
-      <input v-model="name" placeholder="Nome" />
-      <input v-model="email" placeholder="E-mail" />
-      <input type="password" v-model="password" placeholder="Senha" />
-      <select v-model="role">
-        <option value="paciente">Paciente</option>
-        <option value="secretario">Secretário</option>
-      </select>
-      <button type="submit">Cadastrar</button>
-    </form>
-  </div>
-</template>
-
-<script lang="ts">
-import { ref } from 'vue';
-import api from '../services/api';
-import { useRouter } from 'vue-router';
-
-export default {
-  setup() {
-    const name = ref('');
-    const email = ref('');
-    const password = ref('');
-    const role = ref('paciente');
-    const router = useRouter();
-
-    const onSubmit = async () => {
-      try {
-        await api.post('/api/users/register', {
-          name: name.value,
-          email: email.value,
-          password: password.value,
-          role: role.value,
-        });
-        alert('Cadastro realizado! Faça login.');
-        router.push('/login');
-      } catch (err: any) {
-        alert(err?.response?.data?.message || 'Erro ao cadastrar');
-      }
-    };
-
-    return { name, email, password, role, onSubmit };
-  },
-};
-</script> -->
